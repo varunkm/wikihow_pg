@@ -41,6 +41,7 @@ def main():
                                batch_first=True, # model uses batch first tensors for some reason
                                include_lengths=True,
                                use_vocab=True)
+
     headline_field = data.Field(sequential=True,
                                 init_token=SOS,
                                 eos_token=EOS,
@@ -89,8 +90,6 @@ def main():
         article_lens_t, new_indices = torch.sort(article_lens_t, 0, descending=True)
         article_t = article_t[new_indices, :]
         print("batch", batch_counter)
-        print(article_t)
-        print(headline_t)
         optimizer.zero_grad()
         if config.use_gpu:
             headline_t = headline_t.cuda()
@@ -103,7 +102,7 @@ def main():
         c_t_1 = Variable(torch.zeros((batch_size, 2 * config.hidden_dim)))
         s_t_1 = model.reduce_state(encoder_hidden)
         max_article_len = torch.max(article_lens_t).item()
-
+        assert article_t.size() == (batch_size, max_article_len)
         enc_padding_mask = np.zeros((batch_size, max_article_len), dtype=np.float32)
         # enc_padding_mask is 1 for all non padding words in article_t
         max_art_oov = 0 # max oov words in this batch
@@ -188,6 +187,7 @@ def main():
 
         optimizer.step()
         print("Loss: ", loss.item())
+        batch_counter += 1
 
 def clean(text):
     text = text.replace('\n', '')
