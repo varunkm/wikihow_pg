@@ -12,9 +12,9 @@ from training_ptr_gen.model import Model
 from torch.optim import Adagrad
 
 if config.use_gpu:
-    device = 0
+    device = torch.device('cuda')
 else:
-    device = -1
+    device = torch.device('cpu')
 
 nlp = spacy.load('en', disable=['parser', 'tagger', 'ner'])
 
@@ -93,7 +93,7 @@ def main():
         optimizer.zero_grad()
         if config.use_gpu:
             headline_t = headline_t.cuda()
-            headline_lens_t = headlines_lens_t.cuda()
+            headline_lens_t = headline_lens_t.cuda()
 
         # article_t :: (B x N) where N is max sequence length of batch
         encoder_outputs, encoder_feature, encoder_hidden = \
