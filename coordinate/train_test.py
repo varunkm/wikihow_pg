@@ -24,7 +24,7 @@ EOS = '[STOP]'
 def main():
     TEST_FRAC = 0.2
     DATA_SET_SAMPLE = 100
-    SAMPLE = True
+    SAMPLE = False
     print("Loading dataset")
     whole_dataset = pd.read_csv('../data/wikihowAll.csv')
     if SAMPLE:
@@ -37,7 +37,9 @@ def main():
     test.to_csv('../data/test.csv', index=False)
 
     article_field = data.Field(sequential=True,
-                               tokenize=tokenizer,
+                               stop_words=['\n'],
+                               init_token=SOS,
+                               eos_token=EOS,
                                batch_first=True, # model uses batch first tensors for some reason
                                include_lengths=True,
                                use_vocab=True)
@@ -45,7 +47,7 @@ def main():
     headline_field = data.Field(sequential=True,
                                 init_token=SOS,
                                 eos_token=EOS,
-                                tokenize=tokenizer,
+                                stop_words=['\n'],
                                 batch_first=True,
                                 include_lengths=True,
                                 use_vocab=True)
@@ -68,7 +70,7 @@ def main():
 
     train_bch, test_bch = data.BucketIterator.splits(datasets=(train_set, test_set), # specify train and validation Tabulardataset
                                             batch_sizes=(config.batch_size,config.batch_size),  # batch size of train and validation
-                                            device='cpu', # -1 mean cpu and 0 or None mean gpu
+                                            device=torch.device('cpu'), # -1 mean cpu and 0 or None mean gpu
                                             repeat=False)
 
     # construct the model first
@@ -148,12 +150,12 @@ def main():
             s_t_1 = s_t_1.cuda()
             enc_padding_mask = enc_padding_mask.cuda()
             dec_padding_mask = dec_padding_mask.cuda()
-            if extra_zeros:
+            if extra_zeros is not None:
                 extra_zeros = extra_zeros.cuda()
-            if coverage:
+            if coverage is not None:
                 coverage = coverage.cuda()
             dec_batch = dec_batch.cuda()
-            target_batch = target.cuda()
+            target_batch = target_batch.cuda()
             dec_lens_var = dec_lens_var.cuda()
         max_dec_len = max(headline_lens_t)
         
@@ -216,4 +218,3 @@ class BatchGenerator:
 
 if __name__ == "__main__":
     main()
-
