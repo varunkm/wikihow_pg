@@ -68,7 +68,7 @@ def main():
 
     train_bch, test_bch = data.BucketIterator.splits(datasets=(train_set, test_set), # specify train and validation Tabulardataset
                                             batch_sizes=(config.batch_size,config.batch_size),  # batch size of train and validation
-                                            device=device, # -1 mean cpu and 0 or None mean gpu
+                                            device='cpu', # -1 mean cpu and 0 or None mean gpu
                                             repeat=False)
 
     # construct the model first
@@ -92,6 +92,8 @@ def main():
         print("batch", batch_counter)
         optimizer.zero_grad()
         if config.use_gpu:
+            article_t = article_t.cuda()
+            article_lens_t = article_lens_t.cuda()
             headline_t = headline_t.cuda()
             headline_lens_t = headline_lens_t.cuda()
 
@@ -143,6 +145,7 @@ def main():
         
         if config.use_gpu:
             c_t_1 = c_t_1.cuda()
+            s_t_1 = s_t_1.cuda()
             enc_padding_mask = enc_padding_mask.cuda()
             dec_padding_mask = dec_padding_mask.cuda()
             if extra_zeros:
